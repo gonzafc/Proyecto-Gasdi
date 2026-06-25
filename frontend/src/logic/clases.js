@@ -1,4 +1,3 @@
-// Descomentar los "export" cuando vayas a importar esto en React
 export class Usuario {
   constructor(id, nombre) {
     this.id = id;
@@ -26,6 +25,10 @@ export class Grupo {
 
   agregarUsuario(usuario) {
     this.usuarios.push(usuario);
+  }
+
+  eliminarUsuario(id) {
+    this.usuarios = this.usuarios.filter(usuario => usuario.id !== id);
   }
 
   agregarGasto(gasto) {
@@ -110,22 +113,3 @@ export class Grupo {
     };
   }
 }
-
-// --- TEST DE PRUEBA ---
-const grupoFacultad = new Grupo(1, "Trabajo Práctico Sistemas");
-
-const gonzalo = new Usuario(1, "Gonzalo");
-const luciano = new Usuario(2, "Luciano");
-const nahuel = new Usuario(3, "Nahuel");
-const tato = new Usuario(4, "Tatooo");
-
-grupoFacultad.agregarUsuario(gonzalo);
-grupoFacultad.agregarUsuario(luciano);
-grupoFacultad.agregarUsuario(nahuel);
-grupoFacultad.agregarUsuario(tato);
-
-grupoFacultad.agregarGasto(new Gasto(101, "Comida", 15000.50, 1, [1, 2, 3, 4]));
-grupoFacultad.agregarGasto(new Gasto(102, "Bebidas", 8500, 3, [1, 2, 3, 4]));
-
-const resultados = grupoFacultad.calcularSaldos();
-console.log("Resultados de la juntada:", JSON.stringify(resultados, null, 2));
