@@ -1,0 +1,1 @@
+<h1>Divisor de Gastos</h1>
