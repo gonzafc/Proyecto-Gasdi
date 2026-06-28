@@ -45,3 +45,7 @@ Asegurate de tener instalados [Docker](https://docs.docker.com/get-docker/) y [D
    ```bash
    git clone [https://github.com/tu-usuario/nombre-del-repositorio.git](https://github.com/tu-usuario/nombre-del-repositorio.git)
    cd nombre-del-repositorio
+2. **Docker**
+     ```bash
+   docker compose up --build
+   
