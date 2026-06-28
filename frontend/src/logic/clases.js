@@ -62,8 +62,7 @@ export class Grupo {
     const deudores = [];
     const acreedores = [];
 
-    for (const [idStr, balance] of Object.entries(balances)) {
-      const id = Number(idStr);
+    for (const [id, balance] of Object.entries(balances)) {
       if (balance < -0.01) {
         deudores.push({ id, monto: Math.abs(balance) });
       } else if (balance > 0.01) {
@@ -101,8 +100,7 @@ export class Grupo {
     }
 
     const saldosNetosConNombres = {};
-    for (const [idStr, balance] of Object.entries(balances)) {
-      const id = Number(idStr);
+    for (const [id, balance] of Object.entries(balances)) {
       const nombre = this.usuarios.find(u => u.id === id).nombre;
       saldosNetosConNombres[nombre] = Math.round(balance);
     }

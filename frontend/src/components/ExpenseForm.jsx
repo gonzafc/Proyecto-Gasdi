@@ -1,54 +1,44 @@
 import { useState } from 'react';
-
+    // LÓGICA
 export function ExpenseForm({ amigos, onAddGasto }) {
-  // 1. EL ESTADO DEL FORMULARIO
   const [concepto, setConcepto] = useState('');
-  const [monto, setMonto] = useState('');
+  const [monto, setMonto] = useState('');                   //se guardan los valores de los inputs
   const [pagadorId, setPagadorId] = useState('');
   
-  // Guardamos un array con los IDs de los amigos que tildamos en los checkboxes
-  const [participantesIds, setParticipantesIds] = useState([]);
+  const [participantesIds, setParticipantesIds] = useState([]);         //array de IDs de los amigos que participan en el gasto
 
-  // 2. LÓGICA DE LOS CHECKBOXES
-  // Esta función agrega o saca un ID del array dependiendo de si el usuario tilda o destilda
-  const manejarCheckbox = (id) => {
+  const manejarCheckbox = (id) => {                 //se meten o se sacan ids del array, dependiendo si se marca o no la checkbox
     if (participantesIds.includes(id)) {
-      // Si ya estaba, lo filtramos (lo sacamos)
       setParticipantesIds(participantesIds.filter(participanteId => participanteId !== id));
     } else {
-      // Si no estaba, lo agregamos al final del array
       setParticipantesIds([...participantesIds, id]);
     }
   };
 
-  // 3. ENVÍO DEL FORMULARIO
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validaciones de seguridad para evitar gastos rotos
     if (!concepto.trim() || !monto || !pagadorId || participantesIds.length === 0) {
       alert('Por favor, completá todos los campos y seleccioná al menos un participante.');
       return;
     }
 
-    // Le enviamos el objeto armado al componente padre (App.jsx)
-    // Nos aseguramos de convertir el monto a decimal y el ID a número entero
+    // se envía el objeto armado al App.jsx y se convierte el monto a decimal y el id a entero
     onAddGasto({
       concepto: concepto.trim(),
       monto: parseFloat(monto),
-      pagadorId: Number(pagadorId),
+      pagadorId: pagadorId,
       participantesIds: participantesIds
     });
 
-    // Reiniciamos el formulario para el siguiente ticket
+    // se reestablecen los valores de los inputs a vacío para poder cargar otro gasto
     setConcepto('');
     setMonto('');
     setPagadorId('');
     setParticipantesIds([]);
   };
 
-  // Renderizado condicional de seguridad: 
-  // No podemos cargar un gasto si todavía no hay amigos en el grupo.
+    // si no hay amigos, no se pueden cargar gastoss
   if (amigos.length === 0) {
     return (
       <div style={{ padding: '15px', backgroundColor: '#f0f0f0', borderRadius: '8px' }}>
@@ -57,7 +47,7 @@ export function ExpenseForm({ amigos, onAddGasto }) {
     );
   }
 
-  // 4. LA INTERFAZ VISUAL (JSX)
+  // VISUAL
   return (
     <form onSubmit={handleSubmit} style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '8px' }}>
       <h3>Registrar Nuevo Gasto</h3>

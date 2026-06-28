@@ -1,20 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Grupo, Usuario, Gasto } from './logic/clases'; 
 import { AddFriendForm } from './components/AddFriendForm';
 import { ExpenseForm } from './components/ExpenseForm';
 import { BalanceBoard } from './components/BalanceBoard';
+import { ExpenseList } from './components/ExpenseList';
+import { FriendList } from './components/FriendList';
+import { guardarAmigoEnNube, obtenerAmigosDeNube, guardarGastoEnNube, obtenerGastosDeNube } from './services/firestoreService';
 
 function App() {
   const [grupo] = useState(new Grupo(1, "Juntada"));
   const [amigos, setAmigos] = useState([]);
   const [gastos, setGastos] = useState([]); 
   const [resultados, setResultados] = useState(null);
-  const manejarAgregarAmigo = (nombre) => {
-    const nuevoId = Date.now(); 
-    const nuevoUsuario = new Usuario(nuevoId, nombre);
-    
-    grupo.agregarUsuario(nuevoUsuario);
-    setAmigos([...amigos, nuevoUsuario]);
+
+  useEffect(() => {
+    const inicializarDatos = async () => {
+      try {
+        grupo.usuarios = [];
+        grupo.gastos = [];
+        const datosAmigos = await obtenerAmigosDeNube();
+        const instanciasUsuarios = datosAmigos.map(dato => new Usuario(dato.id, dato.nombre));
+        instanciasUsuarios.forEach(usuario => grupo.agregarUsuario(usuario));
+        setAmigos(instanciasUsuarios);
+        
+        const datosGastos = await obtenerGastosDeNube();
+        const instanciasGastos = datosGastos.map(dato => new Gasto(
+          dato.id, dato.concepto, dato.monto, dato.pagadorId, dato.participantesIds
+        ));
+        instanciasGastos.forEach(gasto => grupo.agregarGasto(gasto));
+        setGastos(instanciasGastos);
+        
+      } catch (error) {
+        console.error("No se pudieron cargar los datos iniciales.");
+      }
+    };
+
+    inicializarDatos();
+  }, []);
+
+  const manejarAgregarAmigo = async (nombre) => {
+    try {
+      const firebaseId = await guardarAmigoEnNube(nombre);
+      const nuevoUsuario = new Usuario(firebaseId, nombre);        //se guarda en firebase y se obtiene el id único generado por firebase      
+      grupo.agregarUsuario(nuevoUsuario);                          //se agrega al grupo
+      setAmigos([...amigos, nuevoUsuario]);                        //se actualiza el estado de amigos para que se renderice la lista
+      
+    } catch (error) {
+      alert("Hubo un problema de conexión al guardar el amigo.");
+    }
   };
 
   const manejarEliminarAmigo = (id) => {
@@ -22,19 +55,24 @@ function App() {
     setAmigos(amigos.filter(amigo => amigo.id !== id));
   };
 
-  const manejarAgregarGasto = (datosGasto) => {
-    const nuevoId = Date.now();
-    const nuevoGasto = new Gasto(
-      nuevoId,
-      datosGasto.concepto,
-      datosGasto.monto,
-      datosGasto.pagadorId,
-      datosGasto.participantesIds
-    );
+  const manejarAgregarGasto = async (datosGasto) => {
+    try {
+      const firebaseId = await guardarGastoEnNube(datosGasto);
+      
+      const nuevoGasto = new Gasto(
+        firebaseId,
+        datosGasto.concepto,
+        datosGasto.monto,
+        datosGasto.pagadorId,
+        datosGasto.participantesIds
+      );
 
-    grupo.agregarGasto(nuevoGasto);
-    
-    setGastos([...gastos, nuevoGasto]);
+      grupo.agregarGasto(nuevoGasto);
+      setGastos([...gastos, nuevoGasto]);
+      
+    } catch (error) {
+      alert("Hubo un problema al guardar el gasto.");
+    }
   };
   const manejarCalcularDeudas = () => {
     if (gastos.length === 0) {
@@ -52,62 +90,20 @@ function App() {
       {/* Contenedor principal con Flexbox para dividir en dos columnas */}
       <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap' }}>
         
-        {/* COLUMNA IZQUIERDA: Gestión de Amigos */}
+        {/* Gestión de Amigos */}
         <div style={{ flex: '1', minWidth: '300px' }}>
           <AddFriendForm onAddFriend={manejarAgregarAmigo} />
+          <FriendList amigos={amigos} onRemoveFriend={manejarEliminarAmigo} />
           
-          <div className="lista-amigos" style={{ marginTop: '20px' }}>
-            <h3>Participantes Actuales:</h3>
-            {amigos.length === 0 ? (
-              <p>Todavía no hay nadie en el grupo.</p>
-            ) : (
-              <ul style={{ listStyleType: 'none', padding: 0 }}>
-                {amigos.map((amigo) => (
-                  <li key={amigo.id} style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
-                    <span><strong>{amigo.nombre}</strong></span> 
-                    <button 
-                      onClick={() => manejarEliminarAmigo(amigo.id)}
-                      style={{ color: '#dc3545', cursor: 'pointer', border: 'none', background: 'none', fontWeight: 'bold' }}
-                    >
-                      X Eliminar
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
         </div>
-        {/* COLUMNA DERECHA: Gestión de Gastos */}
+        {/* Registrar gastos e historial de gastos */}
         <div style={{ flex: '1', minWidth: '300px' }}>
           <ExpenseForm amigos={amigos} onAddGasto={manejarAgregarGasto} />
+          <ExpenseList gastos={gastos} amigos={amigos} />
           
-          <div className="lista-gastos" style={{ marginTop: '20px' }}>
-            <h3>Historial de Gastos:</h3>
-            {gastos.length === 0 ? (
-              <p>Aún no hay gastos registrados.</p>
-            ) : (
-              <ul style={{ listStyleType: 'none', padding: 0 }}>
-                {gastos.map((gasto) => {
-                  // Buscamos el nombre del pagador para mostrarlo en lista
-                  const pagador = amigos.find(a => a.id === gasto.pagadorId)?.nombre;
-                  return (
-                    <li key={gasto.id} style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#f8f9fa', borderRadius: '5px', borderLeft: '4px solid #0d6efd' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <strong>{gasto.concepto}</strong>
-                        <span style={{ fontWeight: 'bold', color: '#198754' }}>${gasto.monto.toFixed(2)}</span>
-                      </div>
-                      <div style={{ fontSize: '0.85em', color: '#6c757d', marginTop: '5px' }}>
-                        Pagó: {pagador} | Participan: {gasto.participantesIds.length}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
         </div>
 
-            {/* 4. SECCIÓN FINAL: BOTÓN DE CÁLCULO Y TABLERO */}
+            {/* Cálculo y tablero */}
       <div style={{ textAlign: 'center', marginTop: '40px' }}>
         <button 
           onClick={manejarCalcularDeudas}
@@ -116,8 +112,6 @@ function App() {
           Calcular Deudas
         </button>
       </div>
-
-      {/* El componente recibe los resultados. Si son null, no se muestra nada. */}
       <BalanceBoard resultados={resultados} />
       </div>
     </div>
