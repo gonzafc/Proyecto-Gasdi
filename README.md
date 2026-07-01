@@ -1,47 +1,99 @@
 ## GASDI
 
-Este repositorio alberga el desarrollo de una aplicación web diseñada para resolver la división de gastos en juntadas.
+Este repositorio alberga el desarrollo de una aplicación web Full-Stack diseñada para resolver la división de gastos en juntadas.
 
-El objetivo principal es automatizar el cálculo de saldos y optimizar las transferencias necesarias para liquidar las deudas.
+El objetivo principal es automatizar el cálculo de saldos y optimizar las transferencias necesarias para liquidar las deudas, procesando la lógica financiera en un entorno de servidor seguro.
+
 ---
 
 ## Arquitectura y Stack Tecnológico
 
 Para garantizar un entorno de desarrollo moderno, ágil y escalable, el proyecto se construye sobre los siguientes pilares tecnológicos:
 
-* **Frontend:** [React](https://react.dev/) (JavaScript)
-    * Utilizado para la construcción de una interfaz de usuario modular, declarativa y basada en componentes de grano fino. Se prioriza el manejo eficiente del estado global y la reactividad para ofrecer una experiencia fluida al usuario.
-* **Herramienta de Construcción (Build Tool):** [Vite](https://vitejs.dev/)
-    * Seleccionado en reemplazo de bundles tradicionales debido a su velocidad disruptiva gracias al uso de ESM nativos. Proporciona un entorno de desarrollo local ultra rápido con *Hot Module Replacement* (HMR) casi instantáneo.
+* **Frontend:** [React](https://react.dev/) (JavaScript) + [Vite](https://vitejs.dev/)
+  * Utilizado para la construcción de una interfaz de usuario modular, declarativa y basada en componentes de grano fino (pantalla pasiva). Se prioriza el manejo eficiente del estado y la reactividad. Vite proporciona un entorno de desarrollo local ultra rápido con *Hot Module Replacement* (HMR).
+* **Backend:** [Python](https://www.python.org/) + [Flask](https://flask.palletsprojects.com/)
+  * API REST robusta que actúa como el cerebro de la aplicación. Maneja el algoritmo matemático de división de gastos y se comunica de forma centralizada con la base de datos mediante el SDK de Administración, asegurando la integridad de las transacciones. El código está preparado para ser estandarizado mediante herramientas de calidad configurables vía `pyproject.toml`.
+* **Persistencia en la Nube:** [Firebase Firestore](https://firebase.google.com/docs/firestore)
+  * Base de datos NoSQL jerárquica (arquitectura de subcolecciones) que almacena de forma segura los registros de grupos, gastos y participantes.
 * **Contenerización:** [Docker](https://www.docker.com/)
-    * Toda la aplicación se encuentra contenerizada para abstraer el entorno de ejecución. Esto garantiza la paridad entre entornos (desarrollo, *staging* y producción), asegurando que cualquier desarrollador pueda clonar el repositorio y levantar el proyecto con un único comando, sin lidiar con discrepancias en las versiones de Node.js o dependencias del sistema operativo.
+  * Toda la aplicación se encuentra contenerizada para abstraer el entorno de ejecución. Esto garantiza la paridad entre entornos (desarrollo, *staging* y producción).
 
 ---
 
 ## Principios de Diseño y Arquitectura de Software
 
-El desarrollo de esta solución no solo busca resolver el problema matemático de la división de dinero, sino también aplicar rigurosas buenas prácticas de diseño de software:
+El desarrollo de esta solución aplica rigurosas buenas prácticas de diseño de software:
 
-1.  **Separación de Intereses:** La lógica de negocio (el algoritmo encargado de procesar los gastos y calcular las compensaciones óptimas) se mantiene 100% aislada de la capa de presentación (componentes de React). Es un motor en JavaScript puro, fácilmente testeable de forma unitaria.
-2.  **Principios SOLID:** Diseñado bajo una estructura donde cada componente y módulo tiene una única responsabilidad (SRP), permitiendo que nuevas funcionalidades (como la división no equitativa) se puedan extender sin modificar el núcleo del código existente.
-3.  **Persistencia y Escalabilidad:** En una primera fase, la persistencia se gestionará de manera local (*LocalStorage*). Sin embargo, la arquitectura está pensada de forma desacoplada para permitir, en fases avanzadas, la transición hacia una arquitectura de microservicios o la integración con bases de datos en la nube para habilitar la sincronización en tiempo real entre múltiples dispositivos.
-
----
-
-## Funcionalidades Planificadas
-
-* **Gestión de Participantes:** Alta, baja y modificación de los miembros que integran la juntada.
-* **Registro de Gastos:** Formulario dinámico para ingresar el concepto del gasto, el monto total y especificar de forma unívoca quién realizó el pago.
-* **Algoritmo de Compensación Óptima:** Motor matemático que reduce al mínimo el número de transacciones necesarias entre los amigos para saldar las deudas.
-* **Resumen de Balances:** Tablero visual claro con el saldo de cada participante (quién está en positivo y quién en negativo) y las instrucciones exactas de transferencia (Ej: *"Tizi le tiene que transferir $1.500,50 al pajero del Enzo"*).
+1.  **Arquitectura Orientada a Servicios (SOA):** La lógica de negocio está 100% aislada en el servidor backend. El frontend de React opera como un cliente "tonto" que consume los *endpoints* REST, lo que previene manipulaciones de datos en el navegador y prepara el terreno para futuras aplicaciones móviles.
+2.  **Principios SOLID y Responsabilidad Única:** Diseñado bajo una estructura donde cada componente de React y cada módulo de Python tiene una única responsabilidad. Esto permite que nuevas funcionalidades se puedan extender sin modificar el núcleo del código existente.
+3.  **Seguridad de Acceso:** El backend opera con credenciales privadas (Service Account), aislando la capa de datos críticos de la exposición pública del cliente web.
 
 ---
 
-## Instalación y Ejecución con Docker
+## Funcionalidades Planificadas e Implementadas
 
-Asegurate de tener instalados [Docker](https://docs.docker.com/get-docker/) y [Docker Compose](https://docs.docker.com/compose/install/).
+* **Gestión de Participantes:** Alta y baja de los miembros que integran el grupo.
+* **Registro de Gastos:** Formulario dinámico para ingresar el concepto del gasto, el monto total y especificar de forma unívoca quién realizó el pago y quiénes consumieron.
+* **Algoritmo de Compensación Óptima:** Motor matemático estructurado en Programación Orientada a Objetos (Python) que reduce al mínimo el número de transacciones necesarias.
+* **Resumen de Balances:** Tablero visual claro con el saldo de cada participante y las instrucciones exactas de transferencia (Ej: *"Luciano le tiene que transferir $1,500.50 a Nahuel"*).
 
-1. **Clonar el repositorio:**
+---
+
+## Instalación y Ejecución Local
+
+### Fase 1: Configuración del Backend (API REST)
+
+1. **Ubicarse en el directorio del servidor y crear el entorno virtual:**
    ```bash
-   git clone [https://github.com/tu-usuario/nombre-del-repositorio.git](https://github.com/tu-usuario/nombre-del-repositorio.git)
-   cd nombre-del-repositorio
+   cd backend
+   py -m venv venv
+   ```
+2. **Activar el entorno virtual:**
+   * En Windows: `.\venv\Scripts\activate`
+   * En macOS/Linux: `source venv/bin/activate`
+3. **Instalar dependencias:**
+   ```bash
+   py -m pip install Flask flask-cors firebase-admin
+   ```
+4. **Credenciales Privadas:**
+   Colocá tu archivo `firebase-key.json` (generado desde la consola de cuentas de servicio de Google Cloud) en la raíz de la carpeta `backend/`. **Asegurate de que este archivo esté incluido en tu `.gitignore`.**
+5. **Levantar el motor backend:** (si se usa docker, no hace falta esta parte)
+   ```bash
+   py main.py
+   ```
+   *El servidor quedará escuchando en `http://127.0.0.1:8080/`.*
+
+### Fase 2: Configuración del Frontend (React + Vite)
+
+1. **Abrir una nueva terminal y ubicarse en el cliente:**
+   ```bash
+   cd frontend
+   ```
+2. **Instalar dependencias de Node:**
+   ```bash
+   npm install
+   ```
+3. **Configuración de Variables de Entorno:**
+   Creá un archivo `.env` en la raíz de la carpeta `frontend/` y agregá tus credenciales públicas de Firebase:
+   ```env
+   VITE_FIREBASE_API_KEY=tu_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=tu_auth_domain
+   VITE_FIREBASE_PROJECT_ID=tu_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=tu_storage_bucket
+   VITE_FIREBASE_MESSAGING_SENDER_ID=tu_sender_id
+   VITE_FIREBASE_APP_ID=tu_app_id
+   ```
+4. **Levantar la interfaz web:**  (si se usa docker, no hace falta esta parte)
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## Ejecución con Docker (Opcional)
+
+Si preferís levantar ambos servicios simultáneamente mediante contenedores, asegurate de tener instalados [Docker](https://docs.docker.com/get-docker/) y [Docker Compose](https://docs.docker.com/compose/install/) y ejecutá:
+```bash
+docker compose up --build
+```

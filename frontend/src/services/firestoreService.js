@@ -1,13 +1,13 @@
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import { db } from "./firebase";
 
-export const guardarAmigoEnNube = async (nombre) => {
+export const guardarAmigoEnNube = async (nombre, idGrupo) => {
   try {
-    const docRef = await addDoc(collection(db, "usuarios"), {
+    // Apuntamos a la subcolección del grupo
+    const docRef = await addDoc(collection(db, "grupos", idGrupo, "usuarios"), {
       nombre: nombre,
       fechaCreacion: new Date()
     });
-    console.log("¡Amigo guardado con ID: ", docRef.id);
     return docRef.id; 
   } catch (error) {
     console.error("Error al guardar en Firebase: ", error);
@@ -15,33 +15,32 @@ export const guardarAmigoEnNube = async (nombre) => {
   }
 };
 
-export const obtenerAmigosDeNube = async () => {
+export const obtenerAmigosDeNube = async (idGrupo) => {
   try {
-    const querySnapshot = await getDocs(collection(db, "usuarios"));        //se lee la colección "usuarios" de Firebase
-    const amigosArray = [];                                                 //se sacan los amigos de la colección y se guardan en un array para poder usarlos en el frontend
+    const querySnapshot = await getDocs(collection(db, "grupos", idGrupo, "usuarios"));        
+    const amigosArray = [];                                                 
     querySnapshot.forEach((doc) => {
       amigosArray.push({
-        id: doc.id,                                                         // El ID alfanumérico de Firebase
-        nombre: doc.data().nombre                                           // El nombre que guardamos
+        id: doc.id,                                                         
+        nombre: doc.data().nombre                                           
       });
     });
-    
     return amigosArray;
   } catch (error) {
     console.error("Error al obtener amigos: ", error);
     throw error;
   }
 }
-export const guardarGastoEnNube = async (datosGasto) => {
+
+export const guardarGastoEnNube = async (datosGasto, idGrupo) => {
   try {
-    const docRef = await addDoc(collection(db, "gastos"), {
+    const docRef = await addDoc(collection(db, "grupos", idGrupo, "gastos"), {
       concepto: datosGasto.concepto,
       monto: datosGasto.monto,
       pagadorId: datosGasto.pagadorId,
-      participantesIds: datosGasto.participantesIds,
+      participantes_id: datosGasto.participantesIds, 
       fechaCreacion: new Date()
     });
-    console.log("¡Gasto guardado con ID: ", docRef.id);
     return docRef.id; 
   } catch (error) {
     console.error("Error al guardar el gasto: ", error);
@@ -49,9 +48,9 @@ export const guardarGastoEnNube = async (datosGasto) => {
   }
 };
 
-export const obtenerGastosDeNube = async () => {
+export const obtenerGastosDeNube = async (idGrupo) => {
   try {
-    const querySnapshot = await getDocs(collection(db, "gastos"));
+    const querySnapshot = await getDocs(collection(db, "grupos", idGrupo, "gastos"));
     const gastosArray = [];
     
     querySnapshot.forEach((doc) => {
@@ -61,10 +60,10 @@ export const obtenerGastosDeNube = async () => {
         concepto: data.concepto,
         monto: data.monto,
         pagadorId: data.pagadorId,
-        participantesIds: data.participantesIds
+        // Adaptamos la lectura al campo de Firebase
+        participantesIds: data.participantes_id || data.participantesIds 
       });
     });
-    
     return gastosArray;
   } catch (error) {
     console.error("Error al obtener gastos: ", error);

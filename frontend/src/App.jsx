@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Grupo, Usuario, Gasto } from './logic/clases'; 
 import { AddFriendForm } from './components/AddFriendForm';
 import { ExpenseForm } from './components/ExpenseForm';
 import { BalanceBoard } from './components/BalanceBoard';
@@ -8,28 +7,21 @@ import { FriendList } from './components/FriendList';
 import { guardarAmigoEnNube, obtenerAmigosDeNube, guardarGastoEnNube, obtenerGastosDeNube } from './services/firestoreService';
 
 function App() {
-  const [grupo] = useState(new Grupo(1, "Juntada"));
   const [amigos, setAmigos] = useState([]);
   const [gastos, setGastos] = useState([]); 
   const [resultados, setResultados] = useState(null);
 
+  // Se define el ID del grupo con el que estamos trabajando
+  const ID_GRUPO = 'id_grupos';
+
   useEffect(() => {
     const inicializarDatos = async () => {
       try {
-        grupo.usuarios = [];
-        grupo.gastos = [];
-        const datosAmigos = await obtenerAmigosDeNube();
-        const instanciasUsuarios = datosAmigos.map(dato => new Usuario(dato.id, dato.nombre));
-        instanciasUsuarios.forEach(usuario => grupo.agregarUsuario(usuario));
-        setAmigos(instanciasUsuarios);
+        const datosAmigos = await obtenerAmigosDeNube(ID_GRUPO);
+        setAmigos(datosAmigos);
         
-        const datosGastos = await obtenerGastosDeNube();
-        const instanciasGastos = datosGastos.map(dato => new Gasto(
-          dato.id, dato.concepto, dato.monto, dato.pagadorId, dato.participantesIds
-        ));
-        instanciasGastos.forEach(gasto => grupo.agregarGasto(gasto));
-        setGastos(instanciasGastos);
-        
+        const datosGastos = await obtenerGastosDeNube(ID_GRUPO);
+        setGastos(datosGastos);
       } catch (error) {
         console.error("No se pudieron cargar los datos iniciales.");
       }
@@ -40,70 +32,68 @@ function App() {
 
   const manejarAgregarAmigo = async (nombre) => {
     try {
-      const firebaseId = await guardarAmigoEnNube(nombre);
-      const nuevoUsuario = new Usuario(firebaseId, nombre);        //se guarda en firebase y se obtiene el id único generado por firebase      
-      grupo.agregarUsuario(nuevoUsuario);                          //se agrega al grupo
-      setAmigos([...amigos, nuevoUsuario]);                        //se actualiza el estado de amigos para que se renderice la lista
-      
+      const firebaseId = await guardarAmigoEnNube(nombre, ID_GRUPO);
+      setAmigos([...amigos, { id: firebaseId, nombre }]);
     } catch (error) {
       alert("Hubo un problema de conexión al guardar el amigo.");
     }
   };
 
   const manejarEliminarAmigo = (id) => {
-    grupo.eliminarUsuario(id);
     setAmigos(amigos.filter(amigo => amigo.id !== id));
   };
 
   const manejarAgregarGasto = async (datosGasto) => {
     try {
-      const firebaseId = await guardarGastoEnNube(datosGasto);
-      
-      const nuevoGasto = new Gasto(
-        firebaseId,
-        datosGasto.concepto,
-        datosGasto.monto,
-        datosGasto.pagadorId,
-        datosGasto.participantesIds
-      );
-
-      grupo.agregarGasto(nuevoGasto);
-      setGastos([...gastos, nuevoGasto]);
-      
+      const firebaseId = await guardarGastoEnNube(datosGasto, ID_GRUPO);
+      setGastos([...gastos, { id: firebaseId, ...datosGasto }]);
     } catch (error) {
       alert("Hubo un problema al guardar el gasto.");
     }
   };
-  const manejarCalcularDeudas = () => {
+
+  // Conexión a flask
+  const manejarCalcularDeudas = async () => {
     if (gastos.length === 0) {
       alert("No hay gastos registrados para calcular.");
       return;
     }
-    const resultadoCalculo = grupo.calcularSaldos();
-    setResultados(resultadoCalculo);
+    
+    try {
+      const url = `http://127.0.0.1:8080/api/calcular/${ID_GRUPO}`;
+      const respuesta = await fetch(url);
+      
+      if (!respuesta.ok) {
+        throw new Error(`Error del servidor: ${respuesta.status}`);
+      }
+
+      const datos = await respuesta.json();
+      setResultados(datos); // Actualizamos la vista con el JSON de Python
+      
+    } catch (error) {
+      console.error("Hubo un problema al conectar con la API:", error);
+      alert("Asegurate de que el servidor Flask esté corriendo (py main.py)");
+    }
   };
 
   return (
     <div className="app-container" style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '900px', margin: '0 auto' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '30px' }}>Divisor de Gastos</h1>
       
-      {/* Contenedor principal con Flexbox para dividir en dos columnas */}
       <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap' }}>
         
-        {/* Gestión de Amigos */}
         <div style={{ flex: '1', minWidth: '300px' }}>
           <AddFriendForm onAddFriend={manejarAgregarAmigo} />
           <FriendList amigos={amigos} onRemoveFriend={manejarEliminarAmigo} />
-          
         </div>
-        {/* Registrar gastos e historial de gastos */}
+        
         <div style={{ flex: '1', minWidth: '300px' }}>
           <ExpenseForm amigos={amigos} onAddGasto={manejarAgregarGasto} />
           <ExpenseList gastos={gastos} amigos={amigos} />
-          
         </div>
 
-            {/* Cálculo y tablero */}
+      </div>
+
       <div style={{ textAlign: 'center', marginTop: '40px' }}>
         <button 
           onClick={manejarCalcularDeudas}
@@ -112,8 +102,8 @@ function App() {
           Calcular Deudas
         </button>
       </div>
+      
       <BalanceBoard resultados={resultados} />
-      </div>
     </div>
   );
 }
