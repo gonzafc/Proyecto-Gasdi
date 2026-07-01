@@ -2,7 +2,7 @@
 
 Este repositorio alberga el desarrollo de una aplicación web Full-Stack diseñada para resolver la división de gastos en juntadas.
 
-El objetivo principal es automatizar el cálculo de saldos y optimizar las transferencias necesarias para liquidar las deudas, procesando la lógica financiera en un entorno de servidor seguro.
+El objetivo principal es automatizar el cálculo de saldos y optimizar las transferencias necesarias para liquidar las deudas.
 
 ---
 
