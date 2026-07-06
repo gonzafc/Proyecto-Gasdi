@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import { collection, addDoc, getDocs, doc, deleteDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
 export const guardarAmigoEnNube = async (nombre, idGrupo) => {
@@ -30,7 +30,7 @@ export const obtenerAmigosDeNube = async (idGrupo) => {
     console.error("Error al obtener amigos: ", error);
     throw error;
   }
-}
+};
 
 export const guardarGastoEnNube = async (datosGasto, idGrupo) => {
   try {
@@ -67,6 +67,24 @@ export const obtenerGastosDeNube = async (idGrupo) => {
     return gastosArray;
   } catch (error) {
     console.error("Error al obtener gastos: ", error);
+    throw error;
+  }
+};
+
+export const eliminarAmigoDeNube = async (idGrupo, idAmigo) => {
+  try {
+    await deleteDoc(doc(db, "grupos", idGrupo, "usuarios", idAmigo));
+  } catch (error) {
+    console.error("Error al eliminar amigo: ", error);
+    throw error;
+  }
+};
+
+export const eliminarGastoDeNube = async (idGrupo, idGasto) => {
+  try {
+    await deleteDoc(doc(db, "grupos", idGrupo, "gastos", idGasto));
+  } catch (error) {
+    console.error("Error al eliminar gasto: ", error);
     throw error;
   }
 };

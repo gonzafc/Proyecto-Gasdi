@@ -4,7 +4,7 @@ import { ExpenseForm } from './components/ExpenseForm';
 import { BalanceBoard } from './components/BalanceBoard';
 import { ExpenseList } from './components/ExpenseList';
 import { FriendList } from './components/FriendList';
-import { guardarAmigoEnNube, obtenerAmigosDeNube, guardarGastoEnNube, obtenerGastosDeNube } from './services/firestoreService';
+import { guardarAmigoEnNube, obtenerAmigosDeNube, guardarGastoEnNube, obtenerGastosDeNube, eliminarAmigoDeNube, eliminarGastoDeNube } from './services/firestoreService';
 
 function App() {
   const [amigos, setAmigos] = useState([]);
@@ -39,8 +39,23 @@ function App() {
     }
   };
 
-  const manejarEliminarAmigo = (id) => {
-    setAmigos(amigos.filter(amigo => amigo.id !== id));
+  const manejarEliminarAmigo = async (id) => {
+    // Regla: ¿Este ID aparece como pagador o como participante en algún gasto?
+    const estaInvolucrado = gastos.some(gasto => 
+      gasto.pagadorId === id || (gasto.participantesIds && gasto.participantesIds.includes(id))
+    );
+
+    if (estaInvolucrado) {
+      alert("⚠️ No podés eliminar a este participante porque ya está involucrado en un gasto. Eliminá el gasto primero.");
+      return;
+    }
+
+    try {
+      await eliminarAmigoDeNube(ID_GRUPO, id);
+      setAmigos(amigos.filter(amigo => amigo.id !== id));
+    } catch (error) {
+      alert("Hubo un error de conexión al intentar eliminar al participante.");
+    }
   };
 
   const manejarAgregarGasto = async (datosGasto) => {
@@ -52,6 +67,15 @@ function App() {
     }
   };
 
+  const manejarEliminarGasto = async (id) => {
+    try {
+      await eliminarGastoDeNube(ID_GRUPO, id);
+      setGastos(gastos.filter(gasto => gasto.id !== id));
+      setResultados(null); // Resetea la pizarra para obligar a recalcular
+    } catch (error) {
+      alert("Hubo un error al intentar eliminar el gasto.");
+    }
+  };
   // Conexión a flask
   const manejarCalcularDeudas = async () => {
     if (gastos.length === 0) {
@@ -89,7 +113,7 @@ function App() {
         
         <div style={{ flex: '1', minWidth: '300px' }}>
           <ExpenseForm amigos={amigos} onAddGasto={manejarAgregarGasto} />
-          <ExpenseList gastos={gastos} amigos={amigos} />
+          <ExpenseList gastos={gastos} amigos={amigos} onRemoveGasto={manejarEliminarGasto} />
         </div>
 
       </div>

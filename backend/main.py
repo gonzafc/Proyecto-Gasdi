@@ -36,7 +36,7 @@ def calcular_deudas(grupo_id):
                 id_gasto=g.id,
                 concepto=datos_gasto.get('concepto', ''),
                 monto=datos_gasto.get('monto', 0),
-                pagador_id=datos_gasto.get('pagador_id', ''),
+                pagador_id=datos_gasto.get('pagadorId', ''),
                 participantes_ids=datos_gasto.get('participantes_id', [])
             )
             grupo_obj.agregar_gasto(nuevo_gasto)
