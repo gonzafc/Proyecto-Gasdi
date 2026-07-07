@@ -1,13 +1,14 @@
+const formatearDinero = (monto) => {
+  return "$" + monto.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2 
+  });
+};
+
 export function BalanceBoard({ resultados }) {
-  if (!resultados) return null;                     //si no hay resultados, no se muestra nada
+  if (!resultados) return null;
 
   const { saldosNetos, transferencias } = resultados;
-  const formatearDinero = (monto) => {
-    return "$" + monto.toLocaleString('en-US', {       //se usan comas para miles y puntos para decimales, 
-      minimumFractionDigits: 2,                        //y se asegura que siempre haya 2 decimales
-      maximumFractionDigits: 2 
-    });
-  };
 
   return (
     <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#e9ecef', borderRadius: '8px', border: '2px solid #0d6efd' }}>
@@ -37,8 +38,8 @@ export function BalanceBoard({ resultados }) {
             <p style={{ color: '#198754', fontWeight: 'bold' }}>¡No hay deudas! </p>
           ) : (
             <ul style={{ listStyle: 'none', padding: 0 }}>
-              {transferencias.map((transf, index) => (
-                <li key={index} style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px dashed #ccc' }}>
+              {transferencias.map((transf) => (
+                <li key={`${transf.de}-${transf.para}`} style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px dashed #ccc' }}>
                   <strong>{transf.de}</strong> le debe transferir a <strong>{transf.para}</strong>
                   <br/>
                   <span style={{ color: '#0d6efd', fontWeight: 'bold', fontSize: '1.2em' }}>

@@ -6,12 +6,30 @@ import { ExpenseList } from './components/ExpenseList';
 import { FriendList } from './components/FriendList';
 import { guardarAmigoEnNube, obtenerAmigosDeNube, guardarGastoEnNube, obtenerGastosDeNube, eliminarAmigoDeNube, eliminarGastoDeNube } from './services/firestoreService';
 
+// Extraemos los estilos estáticos
+const appContainerStyle = {
+  padding: '20px', 
+  fontFamily: 'sans-serif', 
+  maxWidth: '900px', 
+  margin: '0 auto'
+};
+
+const btnCalcularStyle = {
+  padding: '15px 30px', 
+  fontSize: '1.2em', 
+  backgroundColor: '#198754', 
+  color: 'white', 
+  border: 'none', 
+  borderRadius: '8px', 
+  cursor: 'pointer', 
+  fontWeight: 'bold'
+};
+
 function App() {
   const [amigos, setAmigos] = useState([]);
   const [gastos, setGastos] = useState([]); 
   const [resultados, setResultados] = useState(null);
 
-  // Se define el ID del grupo con el que estamos trabajando
   const ID_GRUPO = 'id_grupos';
 
   useEffect(() => {
@@ -40,7 +58,6 @@ function App() {
   };
 
   const manejarEliminarAmigo = async (id) => {
-    // Regla: ¿Este ID aparece como pagador o como participante en algún gasto?
     const estaInvolucrado = gastos.some(gasto => 
       gasto.pagadorId === id || (gasto.participantesIds && gasto.participantesIds.includes(id))
     );
@@ -71,12 +88,12 @@ function App() {
     try {
       await eliminarGastoDeNube(ID_GRUPO, id);
       setGastos(gastos.filter(gasto => gasto.id !== id));
-      setResultados(null); // Resetea la pizarra para obligar a recalcular
+      setResultados(null);
     } catch (error) {
       alert("Hubo un error al intentar eliminar el gasto.");
     }
   };
-  // Conexión a flask
+
   const manejarCalcularDeudas = async () => {
     if (gastos.length === 0) {
       alert("No hay gastos registrados para calcular.");
@@ -92,7 +109,7 @@ function App() {
       }
 
       const datos = await respuesta.json();
-      setResultados(datos); // Actualizamos la vista con el JSON de Python
+      setResultados(datos); 
       
     } catch (error) {
       console.error("Hubo un problema al conectar con la API:", error);
@@ -101,7 +118,7 @@ function App() {
   };
 
   return (
-    <div className="app-container" style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '900px', margin: '0 auto' }}>
+    <div className="app-container" style={appContainerStyle}>
       <h1 style={{ textAlign: 'center', marginBottom: '30px' }}>Divisor de Gastos</h1>
       
       <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap' }}>
@@ -120,8 +137,9 @@ function App() {
 
       <div style={{ textAlign: 'center', marginTop: '40px' }}>
         <button 
+          type="button"
           onClick={manejarCalcularDeudas}
-          style={{ padding: '15px 30px', fontSize: '1.2em', backgroundColor: '#198754', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+          style={btnCalcularStyle}
         >
           Calcular Deudas
         </button>
