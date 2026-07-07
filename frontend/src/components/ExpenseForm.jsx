@@ -1,13 +1,13 @@
 import { useState } from 'react';
-    // LÓGICA
+
+// LÓGICA
 export function ExpenseForm({ amigos, onAddGasto }) {
   const [concepto, setConcepto] = useState('');
-  const [monto, setMonto] = useState('');                   //se guardan los valores de los inputs
+  const [monto, setMonto] = useState('');                   
   const [pagadorId, setPagadorId] = useState('');
-  
-  const [participantesIds, setParticipantesIds] = useState([]);         //array de IDs de los amigos que participan en el gasto
+  const [participantesIds, setParticipantesIds] = useState([]);         
 
-  const manejarCheckbox = (id) => {                 //se meten o se sacan ids del array, dependiendo si se marca o no la checkbox
+  const manejarCheckbox = (id) => {                 
     if (participantesIds.includes(id)) {
       setParticipantesIds(participantesIds.filter(participanteId => participanteId !== id));
     } else {
@@ -23,7 +23,6 @@ export function ExpenseForm({ amigos, onAddGasto }) {
       return;
     }
 
-    // se envía el objeto armado al App.jsx y se convierte el monto a decimal y el id a entero
     onAddGasto({
       concepto: concepto.trim(),
       monto: parseFloat(monto),
@@ -31,14 +30,12 @@ export function ExpenseForm({ amigos, onAddGasto }) {
       participantesIds: participantesIds
     });
 
-    // se reestablecen los valores de los inputs a vacío para poder cargar otro gasto
     setConcepto('');
     setMonto('');
     setPagadorId('');
     setParticipantesIds([]);
   };
 
-    // si no hay amigos, no se pueden cargar gastoss
   if (amigos.length === 0) {
     return (
       <div style={{ padding: '15px', backgroundColor: '#f0f0f0', borderRadius: '8px' }}>
@@ -53,8 +50,10 @@ export function ExpenseForm({ amigos, onAddGasto }) {
       <h3>Registrar Nuevo Gasto</h3>
 
       <div style={{ marginBottom: '10px' }}>
-        <label>Concepto (Ej: Asado, Bebidas): </label>
+        {/* 1. Conectamos Concepto */}
+        <label htmlFor="input-concepto">Concepto (Ej: Asado, Bebidas): </label>
         <input 
+          id="input-concepto"
           type="text" 
           value={concepto} 
           onChange={(e) => setConcepto(e.target.value)} 
@@ -63,8 +62,10 @@ export function ExpenseForm({ amigos, onAddGasto }) {
       </div>
 
       <div style={{ marginBottom: '10px' }}>
-        <label>Monto Total: $ </label>
+        {/* 2. Conectamos Monto */}
+        <label htmlFor="input-monto">Monto Total: $ </label>
         <input 
+          id="input-monto"
           type="number" 
           step="0.01"
           value={monto} 
@@ -74,8 +75,9 @@ export function ExpenseForm({ amigos, onAddGasto }) {
       </div>
 
       <div style={{ marginBottom: '10px' }}>
-        <label>¿Quién lo pagó? </label>
-        <select value={pagadorId} onChange={(e) => setPagadorId(e.target.value)}>
+        {/* 3. Conectamos Pagador */}
+        <label htmlFor="select-pagador">¿Quién lo pagó? </label>
+        <select id="select-pagador" value={pagadorId} onChange={(e) => setPagadorId(e.target.value)}>
           <option value="" disabled>Seleccioná un amigo...</option>
           {amigos.map(amigo => (
             <option key={amigo.id} value={amigo.id}>
@@ -86,11 +88,12 @@ export function ExpenseForm({ amigos, onAddGasto }) {
       </div>
 
       <div style={{ marginBottom: '15px' }}>
-        <label><strong>¿Quiénes consumieron?</strong></label>
+        <p style={{ margin: '0 0 10px 0' }}><strong>¿Quiénes consumieron?</strong></p>
         {amigos.map(amigo => (
           <div key={amigo.id}>
-            <label>
+            <label htmlFor={`checkbox-${amigo.id}`}>
               <input 
+                id={`checkbox-${amigo.id}`}
                 type="checkbox" 
                 checked={participantesIds.includes(amigo.id)}
                 onChange={() => manejarCheckbox(amigo.id)}

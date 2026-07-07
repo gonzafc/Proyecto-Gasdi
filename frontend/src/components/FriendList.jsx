@@ -10,6 +10,7 @@ export function FriendList({ amigos, onRemoveFriend }) {
             <li key={amigo.id} style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
               <span><strong>{amigo.nombre}</strong></span> 
               <button 
+                type="button"
                 onClick={() => onRemoveFriend(amigo.id)}
                 style={{ color: '#dc3545', cursor: 'pointer', border: 'none', background: 'none', fontWeight: 'bold' }}
               >

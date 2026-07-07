@@ -10,7 +10,7 @@ CORS(app)
 def estado_servidor():
     return jsonify({
         "estado": "ok",
-        "mensaje": "¡El motor Flask de GASDI está vivo y escuchando!"
+        "mensaje": "El motor Flask de GASDI esta vivo y escuchando!"
     })
 
 @app.route('/api/calcular/<grupo_id>', methods=['GET'])
